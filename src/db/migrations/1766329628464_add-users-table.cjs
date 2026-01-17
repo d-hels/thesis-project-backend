@@ -1,0 +1,32 @@
+/* eslint-disable camelcase */
+
+exports.shorthands = undefined
+
+exports.up = pgm => {
+  pgm.createTable('users', {
+    id: {type: 'serial', unique: true},
+    first_name: { type: 'varchar(80)', notNull: true },
+    last_name: { type: 'varchar(80)', notNull: true },
+    email: { type: 'varchar(80)', notNull: true, unique: true },
+    password: { type: 'varchar(255)', notNull: true },
+    phone: { type: 'text', notNull: false },
+    address: { type: 'text', notNull: false },
+    role: { type: 'varchar(30)', notNull: true },
+    created_at: {
+      type: 'timestamp',
+      notNull: true,
+      default: pgm.func('current_timestamp'),
+    },
+    updated_at: {
+        type: 'timestamp with time zone',
+        notNull: true,
+        default: pgm.func('current_timestamp'),
+      },
+  })
+  pgm.createIndex('users', 'id')
+  pgm.addConstraint('users', 'pk_userId_unique', 'UNIQUE(id)')
+}
+
+exports.down = pgm => {
+  pgm.dropTable('users')
+}
