@@ -1,4 +1,5 @@
 import service from '../services/adminService'
+import jwt from "jsonwebtoken";
 
 const adminLogin = async (_req: any, res: any, next: any) => {
     try {
@@ -23,6 +24,22 @@ const adminLogin = async (_req: any, res: any, next: any) => {
       })
     }
 }
+
+const adminGate = async (_req: any, res: any, next: any) => {
+  const { password } = _req.body;
+
+  if (password !== process.env.ADMIN_GATE_PASSWORD) {
+    return res.status(401).json({ message: "Wrong gate password" });
+  }
+
+  const gateToken = jwt.sign(
+    { gate: "admin" },
+    process.env.ADMIN_GATE_JWT_SECRET!,
+    { expiresIn: "5m" }
+  );
+
+  res.json({ gateToken });
+};
 
 const createAdmin = async (_req: any, res: any, next: any) => {
     try {
@@ -94,6 +111,33 @@ const updateUser = async (_req: any, res: any, next: any) => {
   }
 }
 
+const updateMyProfile = async (_req: any, res: any, next: any) => {
+  const payload = {
+    id: _req.body.id,
+    firstName: _req.body.name,
+    lastName: _req.body.surname,
+    email: _req.body.email,
+    phone: _req.body.phone,
+    address: _req.body.address,
+  }
+  console.log(payload)
+
+  try {
+    const result = await service.updateMyProfile(payload)
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    })
+  } catch (err: any) {
+    console.log(err.message)
+    return res.status(500).json({
+      success: false,
+      message: 'Something went wrong',
+    })
+  }
+}
+
 const deleteUser = async (_req: any, res: any, next: any) => {
   const payload = _req.params.id
 
@@ -112,10 +156,30 @@ const deleteUser = async (_req: any, res: any, next: any) => {
   }
 }
 
+const getUsersCount = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getUsersCount()
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    })
+  } catch (err: any) {
+    console.log(err.message)
+    return res.status(500).json({
+      success: false,
+      message: 'Something went wrong',
+    })
+  }
+}
+
 export {
   adminLogin,
+  adminGate,
   createAdmin,
   getUsers,
   updateUser,
   deleteUser,
+  updateMyProfile,
+  getUsersCount,
 }
