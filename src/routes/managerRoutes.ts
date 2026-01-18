@@ -17,10 +17,12 @@ import {
   getWorkers,
   deleteWorker,
   updateWorker,
+  managerLogin,
 } from "../controllers/managerController";
 
+router.route("/login").post(managerLogin);
 router.use(auth([Roles.ADMIN, Roles.MANAGER]));
-router.route('/worker/create').post(workerRegister)
+router.route("/worker/create").post(workerRegister);
 router.route("/createDepartment").post(createDepartment);
 router.route("/getDepartments").get(getDepartments);
 router.route("/departments/update").put(updateDepartment);
@@ -32,8 +34,7 @@ router.route("/positions/update").put(updatePosition);
 router.route("/delete/positions/:id").delete(deletePosition);
 router.route("/getWorkersCount").get(getWorkersCount);
 router.route("/getWorkers").get(getWorkers);
-router.route('/workers/:id').delete(deleteWorker);
-router.route('/workers/update').put(updateWorker)
-
+router.route("/workers/:id").delete(deleteWorker);
+router.route("/workers/update").put(updateWorker);
 
 export default router;

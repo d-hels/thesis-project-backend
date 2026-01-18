@@ -1,11 +1,11 @@
 enum Roles {
-    ADMIN = 'admin',
-    MANAGER = 'manager',
-    WORKER = 'worker',
-}
-  
-interface JwtPayload {
-    id: number
+  ADMIN = "admin",
+  MANAGER = "manager",
+  WORKER = "worker",
 }
 
-export { Roles, JwtPayload }
+interface JwtPayload {
+  id: number;
+}
+
+export { Roles, JwtPayload };

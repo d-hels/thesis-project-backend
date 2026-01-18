@@ -196,7 +196,7 @@ export async function getWorkersCountQuery() {
       text: `SELECT COUNT(*)::int AS employee_count
         FROM users
         WHERE role = $1`,
-      values: ['worker'],
+      values: ["worker"],
     });
   } finally {
     client.release();
@@ -286,7 +286,16 @@ export async function updateWorkerQuery(
       positions_id = COALESCE($8, positions_id)
     WHERE id = $1
     RETURNING id, first_name, last_name, email, phone, address, department_id, positions_id`,
-      values: [id, first_name, last_name, email, phone, address, departmentId, positionsId],
+      values: [
+        id,
+        first_name,
+        last_name,
+        email,
+        phone,
+        address,
+        departmentId,
+        positionsId,
+      ],
     });
     await client.query("COMMIT");
   } catch (error: any) {

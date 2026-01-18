@@ -40,7 +40,7 @@ const adminLogin = async ({
         expiresIn: "10d",
       }
     );
-    console.log(user, "useri");
+
     return {
       token: token,
       user: {
@@ -68,6 +68,7 @@ const createAdmin = async ({
   address,
   role,
   departmentId,
+  positionId,
 }: {
   first_name: string;
   last_name: string;
@@ -77,6 +78,8 @@ const createAdmin = async ({
   address: string;
   role: string;
   departmentId?: string;
+  positionId?: string;
+
 }) => {
   try {
     const salt = await bcrypt.genSalt(10);
@@ -111,7 +114,8 @@ const createAdmin = async ({
         bcryptPassword,
         phone,
         address,
-        departmentId
+        departmentId,
+        positionId,
       );
       const token = jwt.sign(
         { id: manager.id },
@@ -204,7 +208,7 @@ const updateMyProfile = async ({
       phone,
       address
     );
-    console.log(result, "res");
+
     return result;
   } catch (error) {
     console.log(error);

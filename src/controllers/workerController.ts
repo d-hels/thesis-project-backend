@@ -1,4 +1,4 @@
-import service from '../services/workerService'
+import service from "../services/workerService";
 
 const workerRegister = async (_req: any, res: any, next: any) => {
   try {
@@ -11,25 +11,21 @@ const workerRegister = async (_req: any, res: any, next: any) => {
       address: _req.body.address,
       departmentId: _req.body.departmentId,
       positionId: _req.body.positionId,
-    }
+    };
 
-    console.log(payload)
-
-    const result = await service.workerRegister(payload)
+    const result = await service.workerRegister(payload);
 
     res.status(200).json({
       success: true,
       payload: result,
-    })
+    });
   } catch (err: any) {
-    console.log(err.message)
+    console.log(err.message);
     return res.status(500).json({
       success: false,
-      message: 'Something went wrong',
-    })
+      message: "Something went wrong",
+    });
   }
-}
+};
 
-export {
-  workerRegister
-}
+export { workerRegister };

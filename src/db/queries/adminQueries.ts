@@ -30,7 +30,8 @@ export async function createManagerQuery(
   password: any,
   phone: any,
   address: any,
-  departmentId: any
+  departmentId: any,
+  positionId: any,
 ) {
   const client = await pool.connect();
   let res = { rows: [] };
@@ -38,8 +39,8 @@ export async function createManagerQuery(
 
   try {
     res = await client.query({
-      text: `INSERT INTO users(first_name,last_name,email,password,phone,address,department_id, role)
-        VALUES($1,$2,$3,$4,$5,$6,$7, $8) RETURNING *`,
+      text: `INSERT INTO users(first_name,last_name,email,password,phone,address,department_id,positions_id, role)
+        VALUES($1,$2,$3,$4,$5,$6,$7, $8, $9) RETURNING *`,
       values: [
         firstName,
         lastName,
@@ -48,6 +49,7 @@ export async function createManagerQuery(
         phone,
         address,
         departmentId,
+        positionId,
         "manager",
       ],
     });
@@ -147,7 +149,7 @@ export async function updateMyProfileQuery(
   lastName?: any,
   email?: any,
   phone?: any,
-  address?: any,
+  address?: any
 ) {
   const client = await pool.connect();
   let res;

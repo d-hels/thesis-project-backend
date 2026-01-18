@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs'
+import bcrypt from "bcryptjs";
 import {
   createDepartmentQuery,
   createPositionQuery,
@@ -16,7 +16,60 @@ import {
 } from "../db/queries/managerQueries";
 import { getUserByEmailQuery } from "../db/queries/adminQueries";
 import { createWorkerQuery } from "../db/queries/workerQueries";
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
+
+const managerLogin = async ({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) => {
+  try {
+    const user = await getUserByEmailQuery(email);
+    if (!user) {
+      return "Invalid Credentials !";
+    }
+    if (user.role === "admin") {
+      return "Invalid Credentials !";
+    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return "Invalid Credentials !";
+    }
+
+    const tokenPayload = {
+      email: email,
+      id: user.id,
+    };
+
+    const token = jwt.sign(
+      { ...tokenPayload },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: "10d",
+      }
+    );
+
+    return {
+      token: token,
+      user: {
+        id: user.id,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        address: user.address,
+        departmentId: user.departmentId,
+        positionsId: user.positionsId,
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
 
 const workerRegister = async ({
   firstName,
@@ -28,51 +81,54 @@ const workerRegister = async ({
   departmentId,
   positionId,
 }: {
-  firstName: string
-  lastName: string
-  email: string
-  password: string
-  phone: string
-  address: string
-  departmentId?: string
-  positionId?: string
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone: string;
+  address: string;
+  departmentId?: string;
+  positionId?: string;
 }) => {
   try {
-      const salt = await bcrypt.genSalt(10)
-      const bcryptPassword = await bcrypt.hash(password, salt)
+    const salt = await bcrypt.genSalt(10);
+    const bcryptPassword = await bcrypt.hash(password, salt);
 
-      let user = await getUserByEmailQuery(email)
-      console.log(user)
+    let user = await getUserByEmailQuery(email);
+    console.log(user);
 
-      if(!user){
-          user = await createWorkerQuery(
-              firstName,
-              lastName,
-              email,
-              bcryptPassword,
-              phone,
-              address,
-              departmentId,
-              positionId,
-          )
+    if (!user) {
+      user = await createWorkerQuery(
+        firstName,
+        lastName,
+        email,
+        bcryptPassword,
+        phone,
+        address,
+        departmentId,
+        positionId
+      );
 
-          const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
-              expiresIn: '10d',
-          })
-      
-          return {
-              token,
-              ...user,
-          }
-      }
-      else {
-          return 'This user exists'
-      }
+      const token = jwt.sign(
+        { id: user.id },
+        process.env.JWT_SECRET as string,
+        {
+          expiresIn: "10d",
+        }
+      );
+
+      return {
+        token,
+        ...user,
+      };
+    } else {
+      return "This user exists";
+    }
   } catch (err) {
-      console.error(err)
-      throw err
+    console.error(err);
+    throw err;
   }
-}
+};
 
 const createDepartment = async ({
   name,
@@ -231,13 +287,13 @@ const getWorkers = async () => {
 
 const deleteWorker = async ({ id }: { id: number }) => {
   try {
-    const result = await deleteWorkerQuery(id)
-    return result
+    const result = await deleteWorkerQuery(id);
+    return result;
   } catch (error) {
-    console.log(error)
-    throw error
+    console.log(error);
+    throw error;
   }
-}
+};
 
 const updateWorker = async ({
   id,
@@ -249,14 +305,14 @@ const updateWorker = async ({
   departmentId,
   positionsId,
 }: {
-  id: number
-  first_name: string
-  last_name: string
-  email: string
-  phone: string
-  address: number
-  departmentId: string
-  positionsId: string
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: number;
+  departmentId: string;
+  positionsId: string;
 }) => {
   try {
     const result = await updateWorkerQuery(
@@ -267,15 +323,16 @@ const updateWorker = async ({
       phone,
       address,
       departmentId,
-      positionsId,
-    )
-    return result
+      positionsId
+    );
+    return result;
   } catch (error) {
-    console.log(error)
-    throw error
+    console.log(error);
+    throw error;
   }
-}
+};
 export default {
+  managerLogin,
   workerRegister,
   createDepartment,
   getDepartments,
