@@ -99,6 +99,7 @@ export async function getUsersQuery() {
         FROM users
         LEFT JOIN departments
           ON users.department_id = departments.id
+          ORDER BY users.created_at DESC
       `,
       values: [],
     });
@@ -210,4 +211,41 @@ export async function getUsersCountQuery() {
     client.release();
   }
   return camelcasify(res);
+}
+
+export async function getActiveVerifiedNonAdminUsersQuery() {
+  const client = await pool.connect();
+  let res = { rows: [] };
+
+  try {
+    res = await client.query({
+      text: `
+        SELECT
+          users.id,
+          users.first_name || ' ' || users.last_name AS name,
+          users.email,
+          users.phone,
+          users.department_id,
+          departments.name AS department_name,
+          users.positions_id,
+          positions.title AS position_title,
+          users.address,
+          users.status,
+          users.created_at
+        FROM users
+        LEFT JOIN departments ON users.department_id = departments.id
+        LEFT JOIN positions ON users.positions_id = positions.id
+        WHERE users.role IN ('worker', 'manager')
+          AND users.is_active = true
+          AND users.is_verified = true
+          AND users.deleted_at IS NULL
+        ORDER BY users.created_at DESC
+      `,
+      values: [],
+    });
+  } finally {
+    client.release();
+  }
+
+  return camelcasify(res, true);
 }

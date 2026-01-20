@@ -170,6 +170,23 @@ const getUsersCount = async (_req: any, res: any, next: any) => {
   }
 };
 
+const getActiveVerifiedNonAdminUsers = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getActiveVerifiedNonAdminUsers();
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   adminLogin,
   adminGate,
@@ -179,4 +196,5 @@ export {
   deleteUser,
   updateMyProfile,
   getUsersCount,
+  getActiveVerifiedNonAdminUsers,
 };

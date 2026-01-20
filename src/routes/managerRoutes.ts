@@ -1,40 +1,58 @@
 import express from "express";
 const router = express.Router();
+
 import { Roles } from "../lib/types";
 import { auth } from "../middlewares/authentication";
+
 import {
-  createDepartment,
-  createPosition,
-  deleteDepartment,
-  deletePosition,
-  getDepartments,
-  getPositionsByDepartmentId,
-  getPositions,
-  updateDepartment,
-  updatePosition,
-  workerRegister,
-  getWorkersCount,
-  getWorkers,
-  deleteWorker,
-  updateWorker,
   managerLogin,
+  workerRegister,
+  getWorkers,
+  getWorkersCount,
+  updateWorker,
+  deleteWorker,
+  createDepartment,
+  getDepartments,
+  updateDepartment,
+  deleteDepartment,
+  createPosition,
+  getPositions,
+  getPositionsByDepartmentId,
+  updatePosition,
+  deletePosition,
 } from "../controllers/managerController";
 
-router.route("/login").post(managerLogin);
+/* =======================
+   Auth
+======================= */
+router.post("/login", managerLogin);
+
 router.use(auth([Roles.ADMIN, Roles.MANAGER]));
-router.route("/worker/create").post(workerRegister);
-router.route("/createDepartment").post(createDepartment);
-router.route("/getDepartments").get(getDepartments);
-router.route("/departments/update").put(updateDepartment);
-router.route("/delete/departments/:id").delete(deleteDepartment);
-router.route("/getPositionsByDepartmentId/:id").get(getPositionsByDepartmentId);
-router.route("/createPosition").post(createPosition);
-router.route("/getPosition").get(getPositions);
-router.route("/positions/update").put(updatePosition);
-router.route("/delete/positions/:id").delete(deletePosition);
-router.route("/getWorkersCount").get(getWorkersCount);
-router.route("/getWorkers").get(getWorkers);
-router.route("/workers/:id").delete(deleteWorker);
-router.route("/workers/update").put(updateWorker);
+
+/* =======================
+   Workers
+======================= */
+router.post("/workers", workerRegister);
+router.get("/workers", getWorkers);
+router.get("/workers/count", getWorkersCount);
+router.put("/workers", updateWorker);
+router.delete("/workers/:id", deleteWorker);
+
+/* =======================
+   Departments
+======================= */
+router.post("/departments", createDepartment);
+router.get("/departments", getDepartments);
+router.put("/departments", updateDepartment);
+router.delete("/departments/:id", deleteDepartment);
+
+/* =======================
+   Positions
+======================= */
+router.post("/positions", createPosition);
+router.get("/positions", getPositions);
+router.get("/departments/:id/positions", getPositionsByDepartmentId);
+router.put("/positions", updatePosition);
+router.delete("/positions/:id", deletePosition);
 
 export default router;

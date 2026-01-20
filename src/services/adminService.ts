@@ -7,6 +7,7 @@ import {
   deleteUserQuery,
   updateMyProfileQuery,
   getUsersCountQuery,
+  getActiveVerifiedNonAdminUsersQuery,
 } from "../db/queries/adminQueries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -236,6 +237,16 @@ const getUsersCount = async () => {
   }
 };
 
+const getActiveVerifiedNonAdminUsers = async () => {
+  try {
+    const result = await getActiveVerifiedNonAdminUsersQuery();
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export default {
   adminLogin,
   createAdmin,
@@ -244,4 +255,5 @@ export default {
   deleteUser,
   updateMyProfile,
   getUsersCount,
+  getActiveVerifiedNonAdminUsers,
 };
