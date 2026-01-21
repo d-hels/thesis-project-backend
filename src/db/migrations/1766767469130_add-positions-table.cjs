@@ -4,9 +4,9 @@ exports.shorthands = undefined
 
 exports.up = pgm => {
   pgm.createTable('positions', {
-    id: { type: 'serial', notNull: true },
+    id: { type: 'uuid', notNull: true, default: pgm.func('gen_random_uuid()') },
     department_id: {
-      type: 'integer',
+      type: 'uuid',
       notNull: true,
       references: 'departments(id)',
       onDelete: 'CASCADE',
@@ -24,12 +24,12 @@ exports.up = pgm => {
       notNull: true,
       default: pgm.func('current_timestamp'),
     },
-  })
+  });
 
-  pgm.createIndex('positions', 'id')
-  pgm.addConstraint('positions', 'pk_positions_id', 'PRIMARY KEY(id)')
+  pgm.createIndex('positions', 'id');
+  pgm.addConstraint('positions', 'pk_positions_id', 'PRIMARY KEY(id)');
 }
 
 exports.down = pgm => {
-  pgm.dropTable('positions')
+  pgm.dropTable('positions');
 }

@@ -4,8 +4,8 @@ exports.shorthands = undefined
 
 exports.up = pgm => {
   pgm.createTable('workers', {
-    id: { type: 'serial', unique: true },
-    user_id: { type: 'serial', unique: true },
+    id: { type: 'uuid', notNull: true, default: pgm.func('gen_random_uuid()') },
+    user_id: { type: 'uuid', notNull: true, unique: true },
     created_at: {
       type: 'timestamp',
       notNull: true,
@@ -16,16 +16,17 @@ exports.up = pgm => {
       notNull: true,
       default: pgm.func('current_timestamp'),
     },
-  })
-  pgm.createIndex('workers', 'id')
+  });
+
+  pgm.createIndex('workers', 'id');
 
   pgm.addConstraint(
     'workers',
     'fk_users_userId',
     'FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE'
-  )
+  );
 }
 
 exports.down = pgm => {
-  pgm.dropTable('workers')
+  pgm.dropTable('workers');
 }

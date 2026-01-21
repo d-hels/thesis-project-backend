@@ -5,15 +5,15 @@ exports.shorthands = undefined
 exports.up = pgm => {
   pgm.addColumn('users', {
     department_id: {
-      type: 'integer',
+      type: 'uuid',
       notNull: false,
       references: 'departments(id)',
       onDelete: 'SET NULL',
       onUpdate: 'CASCADE'
     },
-  })
+  });
 }
 
 exports.down = pgm => {
-  pgm.dropColumn('users', 'department_id')
+  pgm.dropColumn('users', 'department_id');
 }

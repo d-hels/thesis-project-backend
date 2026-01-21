@@ -4,8 +4,7 @@ exports.shorthands = undefined
 
 exports.up = pgm => {
   pgm.createTable('departments', {
-    id: { type: 'serial', notNull: true },
-    user_id: { type: 'serial', unique: true },
+    id: { type: 'uuid', notNull: true, default: pgm.func('gen_random_uuid()') },
     name: { type: 'varchar(100)', notNull: true, unique: true },
     description: { type: 'text', notNull: false },
     created_at: {
@@ -18,12 +17,12 @@ exports.up = pgm => {
       notNull: true,
       default: pgm.func('current_timestamp'),
     },
-  })
+  });
 
-  pgm.createIndex('departments', 'id')
-  pgm.addConstraint('departments', 'pk_departments_id', 'PRIMARY KEY(id)')
+  pgm.createIndex('departments', 'id');
+  pgm.addConstraint('departments', 'pk_departments_id', 'PRIMARY KEY(id)');
 }
 
 exports.down = pgm => {
-  pgm.dropTable('departments')
+  pgm.dropTable('departments');
 }

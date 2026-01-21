@@ -3,8 +3,11 @@
 exports.shorthands = undefined
 
 exports.up = pgm => {
+  // Enable the uuid-ossp extension if not already enabled
+  pgm.sql('CREATE EXTENSION IF NOT EXISTS "pgcrypto";'); // for gen_random_uuid()
+
   pgm.createTable('users', {
-    id: {type: 'serial', unique: true},
+    id: { type: 'uuid', notNull: true, default: pgm.func('gen_random_uuid()') },
     first_name: { type: 'varchar(80)', notNull: true },
     last_name: { type: 'varchar(80)', notNull: true },
     email: { type: 'varchar(80)', notNull: true, unique: true },
@@ -18,15 +21,16 @@ exports.up = pgm => {
       default: pgm.func('current_timestamp'),
     },
     updated_at: {
-        type: 'timestamp with time zone',
-        notNull: true,
-        default: pgm.func('current_timestamp'),
-      },
-  })
-  pgm.createIndex('users', 'id')
-  pgm.addConstraint('users', 'pk_userId_unique', 'UNIQUE(id)')
-}
+      type: 'timestamp with time zone',
+      notNull: true,
+      default: pgm.func('current_timestamp'),
+    },
+  });
+
+  pgm.createIndex('users', 'id');
+  pgm.addConstraint('users', 'pk_userId_unique', 'UNIQUE(id)');
+};
 
 exports.down = pgm => {
-  pgm.dropTable('users')
-}
+  pgm.dropTable('users');
+};
