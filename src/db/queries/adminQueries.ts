@@ -39,7 +39,7 @@ export async function createManagerQuery(
 
   try {
     res = await client.query({
-      text: `INSERT INTO users(first_name,last_name,email,password,phone,address,department_id,positions_id, role)
+      text: `INSERT INTO users(first_name,last_name,email,password,phone,address,department_id,position_id, role)
         VALUES($1,$2,$3,$4,$5,$6,$7, $8, $9) RETURNING *`,
       values: [
         firstName,
@@ -70,15 +70,39 @@ export async function getUserByEmailQuery(email: string) {
   let res = { rows: [] };
   try {
     res = await client.query({
-      text: `SELECT * from users 
-        WHERE email = $1`,
+      text: `
+        SELECT
+          users.id,
+          users.first_name,
+          users.last_name,
+          users.password,
+          users.email,
+          users.phone,
+          users.role,
+          users.department_id,
+          users.position_id,
+          departments.name AS department_name,
+          positions.title AS positions_title,
+          users.address,
+          users.created_at
+        FROM users
+        LEFT JOIN departments
+          ON users.department_id = departments.id
+        LEFT JOIN positions
+          ON users.position_id = positions.id
+        WHERE users.email = $1
+        LIMIT 1
+      `,
       values: [email],
     });
+    console.log(res, 'res')
   } finally {
     client.release();
   }
+
   return camelcasify(res);
 }
+
 
 export async function getUsersQuery() {
   const client = await pool.connect();
@@ -227,14 +251,14 @@ export async function getActiveVerifiedNonAdminUsersQuery() {
           users.phone,
           users.department_id,
           departments.name AS department_name,
-          users.positions_id,
+          users.position_id,
           positions.title AS position_title,
           users.address,
           users.status,
           users.created_at
         FROM users
         LEFT JOIN departments ON users.department_id = departments.id
-        LEFT JOIN positions ON users.positions_id = positions.id
+        LEFT JOIN positions ON users.position_id = positions.id
         WHERE users.role IN ('worker', 'manager')
           AND users.is_active = true
           AND users.is_verified = true

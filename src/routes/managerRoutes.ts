@@ -20,6 +20,12 @@ import {
   getPositionsByDepartmentId,
   updatePosition,
   deletePosition,
+  checkInAttendance,
+  checkOutAttendance,
+  getAbsentWorkersCountByDepartment,
+  getAttendanceWorkersByDepartment,
+  getIfaUserCheckedIn,
+  getDepartmentAttendanceStatsById,
 } from "../controllers/managerController";
 
 /* =======================
@@ -54,5 +60,16 @@ router.get("/positions", getPositions);
 router.get("/departments/:id/positions", getPositionsByDepartmentId);
 router.put("/positions", updatePosition);
 router.delete("/positions/:id", deletePosition);
+
+/* =======================
+   Attendance
+======================= */
+
+router.get("/attendance/:id", getAttendanceWorkersByDepartment);
+router.post("/check-in", checkInAttendance);
+router.post("/check-out", checkOutAttendance);
+router.get("/absent/:id", getAbsentWorkersCountByDepartment);
+router.get("/checked-in/:id", getIfaUserCheckedIn);
+router.get("/stats/:id", getDepartmentAttendanceStatsById);
 
 export default router;

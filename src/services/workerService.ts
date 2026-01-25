@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { getUserByEmailQuery } from "../db/queries/adminQueries";
-import { createWorkerQuery } from "../db/queries/workerQueries";
+import { checkInAttendanceQuery, checkOutAttendanceQuery, createWorkerQuery } from "../db/queries/workerQueries";
 import jwt from "jsonwebtoken";
 const expiresIn = process.env.JWT_EXPIRES_IN;
 
@@ -66,6 +66,40 @@ const workerRegister = async ({
   }
 };
 
+const checkInAttendance = async ({
+  userId,
+  checkIn,
+}: {
+  userId: string;
+  checkIn: string;
+}) => {
+  try {
+    const result = await checkInAttendanceQuery({userId, checkIn});
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const checkOutAttendance = async ({
+  userId,
+  checkOut,
+}: {
+  userId: string;
+  checkOut: string;
+}) => {
+  try {
+    const result = await checkOutAttendanceQuery({userId, checkOut});
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export default {
   workerRegister,
+  checkInAttendance,
+  checkOutAttendance,
 };

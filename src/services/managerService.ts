@@ -13,9 +13,13 @@ import {
   getWorkersQuery,
   deleteWorkerQuery,
   updateWorkerQuery,
+  getAbsentWorkersCountByDepartmentQuery,
+  getAttendanceWorkersByDepartmentQuery,
+  getIfaUserCheckedInQuery,
+  getDepartmentAttendanceStatsByIdQuery,
 } from "../db/queries/managerQueries";
 import { getUserByEmailQuery } from "../db/queries/adminQueries";
-import { createWorkerQuery } from "../db/queries/workerQueries";
+import { checkInAttendanceQuery, checkOutAttendanceQuery, createWorkerQuery } from "../db/queries/workerQueries";
 import jwt from "jsonwebtoken";
 
 const managerLogin = async ({
@@ -27,6 +31,7 @@ const managerLogin = async ({
 }) => {
   try {
     const user = await getUserByEmailQuery(email);
+
     if (!user) {
       return "Invalid Credentials !";
     }
@@ -63,6 +68,8 @@ const managerLogin = async ({
         address: user.address,
         departmentId: user.departmentId,
         positionsId: user.positionsId,
+        departmentName: user.departmentName,
+        positionsTitle: user.positionsTitle,
       },
     };
   } catch (error) {
@@ -331,6 +338,79 @@ const updateWorker = async ({
     throw error;
   }
 };
+
+const getAttendanceWorkersByDepartment = async (id: string) => {
+  try {
+    const result = await getAttendanceWorkersByDepartmentQuery(id);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const checkInAttendance = async ({
+  userId,
+  checkIn,
+}: {
+  userId: string;
+  checkIn: string;
+}) => {
+  try {
+    const result = await checkInAttendanceQuery({userId, checkIn});
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const checkOutAttendance = async ({
+  userId,
+  checkOut,
+}: {
+  userId: string;
+  checkOut: string;
+}) => {
+  try {
+    const result = await checkOutAttendanceQuery({userId, checkOut});
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getAbsentWorkersCountByDepartment = async (id: string) => {
+  try {
+    const result = await getAbsentWorkersCountByDepartmentQuery(id);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getIfaUserCheckedIn = async (id: string) => {
+  try {
+    const result = await getIfaUserCheckedInQuery(id);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getDepartmentAttendanceStatsById = async (departmentId: string) => {
+  try {
+    const result = await getDepartmentAttendanceStatsByIdQuery(departmentId);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export default {
   managerLogin,
   workerRegister,
@@ -347,4 +427,10 @@ export default {
   getWorkers,
   deleteWorker,
   updateWorker,
+  getAttendanceWorkersByDepartment,
+  checkInAttendance,
+  checkOutAttendance,
+  getAbsentWorkersCountByDepartment,
+  getIfaUserCheckedIn,
+  getDepartmentAttendanceStatsById,
 };

@@ -185,7 +185,7 @@ export async function getPositionsByDepartmentIdQuery(departmentId: number) {
     client.release();
   }
 
-  return camelcasify(res);
+  return camelcasify(res, true);
 }
 
 export async function getWorkersCountQuery() {
@@ -218,7 +218,7 @@ export async function getWorkersQuery() {
         users.phone,
         users.department_id,
         departments.name AS department_name,
-        users.positions_id,
+        users.position_id,
         positions.title AS position_title,
         users.address,
         users.created_at
@@ -226,7 +226,7 @@ export async function getWorkersQuery() {
         LEFT JOIN departments
           ON users.department_id = departments.id
         LEFT JOIN positions
-          ON users.positions_id = positions.id
+          ON users.position_id = positions.id
         WHERE users.role = 'worker'
       ORDER BY users.created_at DESC
       `,
@@ -283,9 +283,9 @@ export async function updateWorkerQuery(
       phone      = COALESCE($5, phone),
       address    = COALESCE($6, address),
       department_id = COALESCE($7, department_id),
-      positions_id = COALESCE($8, positions_id)
+      position_id = COALESCE($8, position_id)
     WHERE id = $1
-    RETURNING id, first_name, last_name, email, phone, address, department_id, positions_id`,
+    RETURNING id, first_name, last_name, email, phone, address, department_id, position_id`,
       values: [
         id,
         first_name,
@@ -304,3 +304,156 @@ export async function updateWorkerQuery(
     client.release();
   }
 }
+
+export async function getAttendanceWorkersByDepartmentQuery(id: string) {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `
+        SELECT 
+        a.*,
+        u.first_name || ' ' || u.last_name AS full_name
+        FROM attendance a
+        JOIN users u 
+        ON u.id = a.user_id
+        WHERE u.department_id = $1
+        AND a.date = CURRENT_DATE
+      `,
+      values: [id],
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res, true);
+}
+
+export async function getAbsentWorkersCountByDepartmentQuery(id: string) {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `
+        SELECT COUNT(DISTINCT a.user_id) AS present_count
+        FROM attendance a
+        JOIN users u ON u.id = a.user_id
+        WHERE a.date = CURRENT_DATE
+        AND a.status = 'absent'
+        AND u.department_id = $1
+      `,
+      values: [id],
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res);
+}
+
+export async function getIfaUserCheckedInQuery(id: string) {
+  const client = await pool.connect();
+
+  try {
+    const res = await client.query({
+      text: `
+        SELECT
+  check_in IS NOT NULL  AS checked_in,
+  check_out IS NOT NULL AS checked_out
+FROM attendance
+WHERE user_id = $1
+  AND date = CURRENT_DATE
+LIMIT 1;
+
+      `,
+      values: [id],
+    });
+
+    if (!res.rows.length) {
+      // no attendance record today
+      return {
+        success: false,
+        payload: "can_check_in",
+      };
+    }
+
+    const { checked_in, checked_out } = res.rows[0];
+
+    // ❌ already checked in AND checked out (nothing allowed)
+    if (checked_in && checked_out) {
+      return {
+        success: false,
+        payload: "already_checked_in_and_out",
+      };
+    }
+
+    // ✅ checked in, can CHECK OUT
+    if (checked_in && !checked_out) {
+      return {
+        success: true,
+        payload: "can_check_out",
+      };
+    }
+
+    return {
+      success: true,
+      data: camelcasify(res),
+    };
+  } finally {
+    client.release();
+  }
+}
+
+export async function getDepartmentAttendanceStatsByIdQuery(departmentId: string) {
+  const client = await pool.connect();
+  let res = { rows: [] };
+
+  try {
+    res = await client.query({
+      text: `
+        SELECT
+          d.id AS department_id,
+          d.name AS department_name,
+
+          COUNT(u.id) AS total_workers,
+
+          COUNT(
+            CASE
+              WHEN a.status IN ('present', 'late') THEN 1
+            END
+          ) AS present_workers,
+
+          COUNT(
+            CASE
+              WHEN a.status NOT IN ('present', 'late') OR a.status IS NULL THEN 1
+            END
+          ) AS absent_workers,
+
+          ROUND(
+            COUNT(
+              CASE
+                WHEN a.status IN ('present', 'late') THEN 1
+              END
+            ) * 100.0 / COUNT(u.id),
+            2
+          ) AS attendance_percentage
+
+        FROM departments d
+        JOIN users u
+          ON u.department_id = d.id
+        LEFT JOIN attendance a
+          ON a.user_id = u.id
+          AND a.date = CURRENT_DATE
+
+        WHERE d.id = $1
+          AND u.role = 'worker'
+
+        GROUP BY d.id, d.name;
+      `,
+      values: [departmentId],
+    });
+  } finally {
+    client.release();
+  }
+
+  return camelcasify(res);
+}
+

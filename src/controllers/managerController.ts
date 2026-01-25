@@ -311,6 +311,133 @@ const updateWorker = async (_req: any, res: any, next: any) => {
   }
 };
 
+const getAttendanceWorkersByDepartment = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getAttendanceWorkersByDepartment(_req.params.id);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const checkInAttendance = async (_req: any, res: any, next: any) => {
+  const payload = {
+    userId: _req.body.userId,
+    checkIn: _req.body.checkIn,
+  };
+
+  try {
+    const result = await service.checkInAttendance(payload);
+
+    if (result.success === false && result.reason === 'ALREADY_CHECKED_IN') {
+      return res.status(200).json({
+        success: false,
+        message: 'User has already checked in today',
+      });
+    }
+  
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const checkOutAttendance = async (_req: any, res: any, next: any) => {
+  const payload = {
+    userId: _req.body.userId,
+    checkOut: _req.body.checkOut,
+  };
+
+  try {
+    const result = await service.checkOutAttendance(payload);
+
+    if (result.success === false && result.reason === 'ALREADY_CHECKED_OUT') {
+      return res.status(200).json({
+        success: false,
+        message: 'User has already checked in today',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getAbsentWorkersCountByDepartment = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getAbsentWorkersCountByDepartment(_req.params.id);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getIfaUserCheckedIn = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getIfaUserCheckedIn(_req.params.id);
+
+    if (result.success === false) {
+      return res.status(200).json(result);
+    }
+
+    res.status(200).json(result);
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getDepartmentAttendanceStatsById = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getDepartmentAttendanceStatsById(_req.params.id);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   managerLogin,
   workerRegister,
@@ -327,4 +454,10 @@ export {
   getWorkers,
   deleteWorker,
   updateWorker,
+  getAttendanceWorkersByDepartment,
+  checkInAttendance,
+  checkOutAttendance,
+  getAbsentWorkersCountByDepartment,
+  getIfaUserCheckedIn,
+  getDepartmentAttendanceStatsById,
 };

@@ -9,6 +9,7 @@ exports.up = pgm => {
     date: { type: 'date', notNull: true },
     check_in: { type: 'time', notNull: false },
     check_out: { type: 'time', notNull: false },
+    // present | absent | late | half-day
     status: { type: 'varchar(20)', notNull: true },
     created_at: {
       type: 'timestamp',
