@@ -17,6 +17,11 @@ import {
   getAttendanceWorkersByDepartmentQuery,
   getIfaUserCheckedInQuery,
   getDepartmentAttendanceStatsByIdQuery,
+  getDepartmentAttendanceByDateRangeQuery,
+  getWorkersByDepartmentIdQuery,
+  getContractsQuery,
+  createContractQuery,
+  updateContractStatusQuery,
 } from "../db/queries/managerQueries";
 import { getUserByEmailQuery } from "../db/queries/adminQueries";
 import { checkInAttendanceQuery, checkOutAttendanceQuery, createWorkerQuery } from "../db/queries/workerQueries";
@@ -411,6 +416,87 @@ const getDepartmentAttendanceStatsById = async (departmentId: string) => {
   }
 };
 
+const getDepartmentAttendanceByDateRange = async ({
+  departmentId,
+  startDate,
+  endDate,
+}: {
+  departmentId: string;
+  startDate: string,
+  endDate: string,
+}) => {
+  try {
+    const result = await getDepartmentAttendanceByDateRangeQuery(departmentId, startDate, endDate);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getWorkersByDepartmentId = async (departmentId: string) => {
+  try {
+    const result = await getWorkersByDepartmentIdQuery(departmentId);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getContracts = async () => {
+  try {
+    const result = await getContractsQuery();
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const createContract = async ({
+  userId,
+  contractType,
+  salaryAmount,
+  startDate,
+  endDate,
+  status,
+}: {
+  userId: string;
+  contractType: string;
+  salaryAmount: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+}) => {
+  try {
+    const contract = await createContractQuery({ userId, contractType, salaryAmount, startDate, endDate, status });
+
+    return {
+      ...contract,
+    };
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+const updateContractStatus = async ({
+  id,
+  status,
+}: {
+  id: number;
+  status: string;
+}) => {
+  try {
+    const result = await updateContractStatusQuery(id, status);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export default {
   managerLogin,
   workerRegister,
@@ -433,4 +519,9 @@ export default {
   getAbsentWorkersCountByDepartment,
   getIfaUserCheckedIn,
   getDepartmentAttendanceStatsById,
+  getDepartmentAttendanceByDateRange,
+  getWorkersByDepartmentId,
+  getContracts,
+  createContract,
+  updateContractStatus,
 };

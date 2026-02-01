@@ -8,6 +8,7 @@ import {
   updateMyProfileQuery,
   getUsersCountQuery,
   getActiveVerifiedNonAdminUsersQuery,
+  updateUserStatusQuery,
 } from "../db/queries/adminQueries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -158,6 +159,7 @@ const updateUser = async ({
   email,
   phone,
   address,
+  role,
   departmentId,
 }: {
   id: number;
@@ -166,6 +168,7 @@ const updateUser = async ({
   email: string;
   phone: string;
   address: number;
+  role: string;
   departmentId: string;
 }) => {
   try {
@@ -176,6 +179,7 @@ const updateUser = async ({
       email,
       phone,
       address,
+      role,
       departmentId
     );
     return result;
@@ -247,6 +251,25 @@ const getActiveVerifiedNonAdminUsers = async () => {
   }
 };
 
+const updateUserStatus = async ({
+  id,
+  isActive,
+}: {
+  id: number;
+  isActive: boolean;
+}) => {
+  try {
+    const result = await updateUserStatusQuery(
+      id,
+      isActive
+    );
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export default {
   adminLogin,
   createAdmin,
@@ -256,4 +279,5 @@ export default {
   updateMyProfile,
   getUsersCount,
   getActiveVerifiedNonAdminUsers,
+  updateUserStatus,
 };

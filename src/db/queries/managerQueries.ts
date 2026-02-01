@@ -22,14 +22,14 @@ export async function getDepartmentsQuery() {
   try {
     res = await client.query({
       text: `
-            SELECT
-            id,
-            name,
-            description,
-            created_at
-            FROM departments
-            ORDER BY created_at DESC
-        `,
+        SELECT
+        id,
+        name,
+        description,
+        created_at
+        FROM departments
+        ORDER BY created_at DESC
+      `,
     });
   } finally {
     client.release();
@@ -319,6 +319,7 @@ export async function getAttendanceWorkersByDepartmentQuery(id: string) {
         ON u.id = a.user_id
         WHERE u.department_id = $1
         AND a.date = CURRENT_DATE
+        AND u.role = 'worker'
       `,
       values: [id],
     });
@@ -457,3 +458,115 @@ export async function getDepartmentAttendanceStatsByIdQuery(departmentId: string
   return camelcasify(res);
 }
 
+export async function getDepartmentAttendanceByDateRangeQuery(
+  departmentId: string,
+  startDate: string,
+  endDate: string
+) {
+  const client = await pool.connect();
+  let res = { rows: [] };
+
+  try {
+    res = await client.query({
+      text: `
+        SELECT
+          a.*,
+          u.first_name || ' ' || u.last_name AS full_name,
+          u.email
+        FROM attendance a
+        JOIN users u 
+          ON a.user_id = u.id
+          AND a.date BETWEEN $2 AND $3
+        WHERE u.department_id = $1
+          AND u.role = 'worker'
+        ORDER BY a.date ASC, u.first_name ASC;
+      `,
+      values: [departmentId, startDate, endDate],
+    });
+  } finally {
+    client.release();
+  }
+
+  return camelcasify(res, true);
+}
+
+export async function getWorkersByDepartmentIdQuery(departmentId: string) {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `
+        Select
+        id,
+        first_name || ' ' || last_name AS full_name
+        from users
+        where department_id = $1
+        AND role = 'worker'
+      `,
+      values: [departmentId],
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res, true);
+}
+
+export async function getContractsQuery() {
+  const client = await pool.connect();
+  let res = { rows: [] };
+
+  try {
+    res = await client.query({
+      text: `
+        SELECT 
+        c.*,
+        u.first_name || ' ' || u.last_name AS full_name
+        FROM contracts c
+        JOIN users u 
+        ON u.id = c.user_id
+        ORDER BY created_at DESC
+      `,
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res, true);
+}
+
+export async function createContractQuery({ userId, contractType, salaryAmount, startDate, endDate, status }: any) {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `INSERT INTO contracts(user_id, contract_type, salary_amount, start_date, end_date, status)
+        VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,
+      values: [userId, contractType, salaryAmount, startDate, endDate, status],
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res);
+}
+
+export async function updateContractStatusQuery(
+  id: any,
+  status?: any,
+) {
+  const client = await pool.connect();
+  let res;
+  try {
+    await client.query("BEGIN");
+    res = await client.query({
+      text: `
+          UPDATE contracts SET
+          status = COALESCE($2, status)
+          WHERE id = $1`,
+      values: [id, status],
+    });
+    await client.query("COMMIT");
+  } catch (error: any) {
+    console.log(error.message);
+  } finally {
+    client.release();
+  }
+}

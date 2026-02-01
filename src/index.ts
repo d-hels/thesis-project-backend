@@ -5,6 +5,7 @@ import workerRoutes from "./routes/workerRoutes";
 import cors from "cors";
 import passport from "passport";
 import { strategy } from "./utils/auth";
+import "./db/queries/attendanceCron";
 
 const app = express();
 const PORT = 3000;

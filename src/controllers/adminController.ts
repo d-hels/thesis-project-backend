@@ -1,22 +1,30 @@
+import { updateUserLastLogin } from "../db/queries/authQueries";
 import service from "../services/adminService";
 import jwt from "jsonwebtoken";
 
-const adminLogin = async (_req: any, res: any, next: any) => {
+const adminLogin = async (_req: any, res: any) => {
   try {
     const payload = {
       email: _req.body.email,
       password: _req.body.password,
     };
-    const result = await service.adminLogin(payload);
 
-    if (result) {
-      res.status(200).json({
-        success: result === "Invalid Credentials !" ? false : true,
-        payload: result,
+    const user: any = await service.adminLogin(payload);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
       });
     }
+
+    await updateUserLastLogin(user.user.id);
+    return res.status(200).json({
+      success: true,
+      payload: user,
+    });
   } catch (err: any) {
-    console.log(err.message);
+    console.error(err.message);
     return res.status(500).json({
       success: false,
       message: "Something went wrong",
@@ -90,6 +98,7 @@ const updateUser = async (_req: any, res: any, next: any) => {
     email: _req.body.email,
     phone: _req.body.phone,
     address: _req.body.address,
+    role: _req.body.role,
     departmentId: _req.body.departmentId,
   };
 
@@ -187,6 +196,28 @@ const getActiveVerifiedNonAdminUsers = async (_req: any, res: any, next: any) =>
   }
 };
 
+const updateUserStatus = async (_req: any, res: any, next: any) => {
+  const payload = {
+    id: _req.params.id,
+    isActive: _req.body.isActive,
+  };
+
+  try {
+    const result = await service.updateUserStatus(payload);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   adminLogin,
   adminGate,
@@ -197,4 +228,5 @@ export {
   updateMyProfile,
   getUsersCount,
   getActiveVerifiedNonAdminUsers,
+  updateUserStatus,
 };

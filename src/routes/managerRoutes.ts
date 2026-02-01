@@ -26,6 +26,12 @@ import {
   getAttendanceWorkersByDepartment,
   getIfaUserCheckedIn,
   getDepartmentAttendanceStatsById,
+  getDepartmentAttendanceByDateRange,
+  getWorkersByDepartmentId,
+  getContracts,
+  createContract,
+  updateContractStatus,
+  sendContractPdfToUser,
 } from "../controllers/managerController";
 
 /* =======================
@@ -43,6 +49,7 @@ router.get("/workers", getWorkers);
 router.get("/workers/count", getWorkersCount);
 router.put("/workers", updateWorker);
 router.delete("/workers/:id", deleteWorker);
+router.get("/departments/workers/:id", getWorkersByDepartmentId);
 
 /* =======================
    Departments
@@ -71,5 +78,14 @@ router.post("/check-out", checkOutAttendance);
 router.get("/absent/:id", getAbsentWorkersCountByDepartment);
 router.get("/checked-in/:id", getIfaUserCheckedIn);
 router.get("/stats/:id", getDepartmentAttendanceStatsById);
+router.get("/department/:id/attendance", getDepartmentAttendanceByDateRange);
+
+/* =======================
+   contracts
+======================= */
+router.get("/contracts", getContracts);
+router.get("/contracts/send-pdf/:id", sendContractPdfToUser);
+router.post("/contracts", createContract);
+router.put("/contracts", updateContractStatus);
 
 export default router;

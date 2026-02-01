@@ -15,6 +15,7 @@ import {
   adminGate,
   getUsersCount,
   getActiveVerifiedNonAdminUsers,
+  updateUserStatus,
 } from "../controllers/adminController";
 
 /* =======================
@@ -41,6 +42,7 @@ router.use(auth([Roles.ADMIN]));
 router.get("/users", getUsers);
 router.get("/users/count", getUsersCount);
 router.put("/users/update", updateUser);
+router.put("/users/update/status/:id", updateUserStatus);
 router.delete("/users/:id", deleteUser);
 
 /* Admins */

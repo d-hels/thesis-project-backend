@@ -1,3 +1,7 @@
+import { updateContractStatusQuery } from "../db/queries/managerQueries";
+import pool from "../db/setup";
+import { generateContractPDFBuffer } from "../lib/contractPdfs";
+import { sendContractEmail } from "../mailSender/mailSender";
 import service from "../services/managerService";
 
 const managerLogin = async (_req: any, res: any, next: any) => {
@@ -438,6 +442,155 @@ const getDepartmentAttendanceStatsById = async (_req: any, res: any, next: any) 
   }
 };
 
+const getDepartmentAttendanceByDateRange = async (_req: any, res: any, next: any) => {
+  try {
+    const payload = {
+      departmentId: _req.params.id,
+      startDate: _req.query.startDate,
+      endDate: _req.query.endDate,
+    };
+    console.log(payload)
+    const result = await service.getDepartmentAttendanceByDateRange(payload);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const sendContractPdfToUser = async (_req: any, res: any) => {
+  try {
+    const id = _req.params.id;
+
+    const { rows } = await pool.query(
+      `
+      SELECT 
+        c.*,
+        u.first_name || ' ' || u.last_name AS full_name,
+        u.email
+      FROM contracts c
+      JOIN users u ON u.id = c.user_id
+      WHERE c.id = $1
+      `,
+      [id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "Contract not found" });
+    }
+
+    const contract = rows[0];
+
+    const pdfBuffer = await generateContractPDFBuffer(contract);
+
+    await sendContractEmail(
+      contract.email,
+      pdfBuffer,
+      contract.full_name
+    );
+
+    await updateContractStatusQuery(id, "sent");
+
+    res.status(200).json({
+      success: true,
+    });
+  
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "PDF generation failed" });
+  }
+};
+
+const getWorkersByDepartmentId = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getWorkersByDepartmentId( _req.params.id);
+    console.log(_req.params.id, 'r')
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getContracts = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getContracts();
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const createContract = async (_req: any, res: any, next: any) => {
+  try {
+    const payload = {
+      userId: _req.body.userId,
+      contractType: _req.body.contractType,
+      salaryAmount: _req.body.salaryAmount,
+      startDate: _req.body.startDate,
+      endDate: _req.body.endDate,
+      status: _req.body.status,
+    };
+
+    const result = await service.createContract(payload);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+
+const updateContractStatus = async (_req: any, res: any, next: any) => {
+  const payload = {
+    id: _req.body.id,
+    status: _req.body.status,
+  };
+
+  try {
+    const result = await service.updateContractStatus(payload);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   managerLogin,
   workerRegister,
@@ -460,4 +613,10 @@ export {
   getAbsentWorkersCountByDepartment,
   getIfaUserCheckedIn,
   getDepartmentAttendanceStatsById,
+  getDepartmentAttendanceByDateRange,
+  sendContractPdfToUser,
+  getWorkersByDepartmentId,
+  getContracts,
+  createContract,
+  updateContractStatus,
 };

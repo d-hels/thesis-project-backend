@@ -119,9 +119,12 @@ export async function getUsersQuery() {
           users.department_id,
           departments.name AS department_name,
           users.address,
+          users.status,
+          users.is_active,
+          users.last_login_at,
           users.created_at
-        FROM users
-        LEFT JOIN departments
+          FROM users
+          LEFT JOIN departments
           ON users.department_id = departments.id
           ORDER BY users.created_at DESC
       `,
@@ -140,6 +143,7 @@ export async function updateUserQuery(
   email?: any,
   phone?: any,
   address?: any,
+  role?: any,
   departmentId?: any
 ) {
   const client = await pool.connect();
@@ -155,10 +159,11 @@ export async function updateUserQuery(
       email      = COALESCE($4, email),
       phone      = COALESCE($5, phone),
       address    = COALESCE($6, address),
-      department_id = COALESCE($7, department_id)
+      role       = COALESCE($7, role),
+      department_id = COALESCE($8, department_id)
     WHERE id = $1
     RETURNING id, first_name, last_name, email, phone, address, department_id`,
-      values: [id, first_name, last_name, email, phone, address, departmentId],
+      values: [id, first_name, last_name, email, phone, address, role, departmentId],
     });
     await client.query("COMMIT");
   } catch (error: any) {
@@ -272,4 +277,40 @@ export async function getActiveVerifiedNonAdminUsersQuery() {
   }
 
   return camelcasify(res, true);
+}
+
+export async function updateUserStatusQuery(
+  id: any,
+  isActive?: any,
+) {
+  const client = await pool.connect();
+  let res;
+  try {
+    await client.query("BEGIN");
+    if(isActive) {
+      res = await client.query({
+        text: `
+          UPDATE users
+          SET is_active = $2,
+          status = 'active'
+          WHERE id = $1`,
+        values: [id, isActive],
+      });
+      await client.query("COMMIT");
+    } else {
+      res = await client.query({
+        text: `
+          UPDATE users
+          SET is_active = $2,
+          status = 'suspended'
+          WHERE id = $1`,
+        values: [id, isActive],
+      });
+      await client.query("COMMIT");
+    }
+  } catch (error: any) {
+    console.log(error.message);
+  } finally {
+    client.release();
+  }
 }
