@@ -32,6 +32,7 @@ import {
   createContract,
   updateContractStatus,
   sendContractPdfToUser,
+  transferUserToDepartment,
 } from "../controllers/managerController";
 
 /* =======================
@@ -50,6 +51,7 @@ router.get("/workers/count", getWorkersCount);
 router.put("/workers", updateWorker);
 router.delete("/workers/:id", deleteWorker);
 router.get("/departments/workers/:id", getWorkersByDepartmentId);
+router.put("/transfer", transferUserToDepartment);
 
 /* =======================
    Departments

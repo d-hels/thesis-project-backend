@@ -1,3 +1,4 @@
+import { updateUserLastLogin } from "../db/queries/authQueries";
 import { updateContractStatusQuery } from "../db/queries/managerQueries";
 import pool from "../db/setup";
 import { generateContractPDFBuffer } from "../lib/contractPdfs";
@@ -10,14 +11,20 @@ const managerLogin = async (_req: any, res: any, next: any) => {
       email: _req.body.email,
       password: _req.body.password,
     };
-    const result = await service.managerLogin(payload);
+    const user: any = await service.managerLogin(payload);
 
-    if (result) {
-      res.status(200).json({
-        success: result === "Invalid Credentials !" ? false : true,
-        payload: result,
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
       });
     }
+
+    await updateUserLastLogin(user.user.id);
+    return res.status(200).json({
+      success: true,
+      payload: user,
+    });
   } catch (err: any) {
     console.log(err.message);
     return res.status(500).json({
@@ -295,6 +302,7 @@ const updateWorker = async (_req: any, res: any, next: any) => {
     email: _req.body.email,
     phone: _req.body.phone,
     address: _req.body.address,
+    status: _req.body.status,
     departmentId: _req.body.departmentId,
     positionsId: _req.body.positionsId,
   };
@@ -510,8 +518,8 @@ const sendContractPdfToUser = async (_req: any, res: any) => {
 
 const getWorkersByDepartmentId = async (_req: any, res: any, next: any) => {
   try {
-    const result = await service.getWorkersByDepartmentId( _req.params.id);
-    console.log(_req.params.id, 'r')
+    const result = await service.getWorkersByDepartmentId(_req.params.id);
+
     res.status(200).json({
       success: true,
       payload: result,
@@ -591,6 +599,28 @@ const updateContractStatus = async (_req: any, res: any, next: any) => {
   }
 };
 
+const transferUserToDepartment = async (_req: any, res: any, next: any) => {
+  const payload = {
+    id: _req.body.id,
+    departmentId: _req.body.departmentId,
+  };
+
+  try {
+    const result = await service.transferUserToDepartment(payload);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   managerLogin,
   workerRegister,
@@ -619,4 +649,5 @@ export {
   getContracts,
   createContract,
   updateContractStatus,
+  transferUserToDepartment,
 };

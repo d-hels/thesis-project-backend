@@ -16,6 +16,10 @@ import {
   getUsersCount,
   getActiveVerifiedNonAdminUsers,
   updateUserStatus,
+  getWorkersCount,
+  getUsersByDepartmentId,
+  getUsersProfile,
+  changePassword,
 } from "../controllers/adminController";
 
 /* =======================
@@ -27,11 +31,7 @@ router.post("/login", adminGateGuard, adminLogin);
 /* =======================
    Protected (Admin / Manager)
 ======================= */
-router.put(
-  "/users/me",
-  auth([Roles.ADMIN, Roles.MANAGER]),
-  updateMyProfile
-);
+router.put("/users/me", auth([Roles.ADMIN, Roles.MANAGER]), updateMyProfile);
 
 /* =======================
    Admin-only
@@ -41,9 +41,13 @@ router.use(auth([Roles.ADMIN]));
 /* Users */
 router.get("/users", getUsers);
 router.get("/users/count", getUsersCount);
+router.get("/workers/count", getWorkersCount);
 router.put("/users/update", updateUser);
 router.put("/users/update/status/:id", updateUserStatus);
 router.delete("/users/:id", deleteUser);
+router.get("/departments/users/:id", getUsersByDepartmentId);
+router.get("/users/profile/:id", getUsersProfile);
+router.put("/change/password", changePassword);
 
 /* Admins */
 router.post("/create", createAdmin);

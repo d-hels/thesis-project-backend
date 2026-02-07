@@ -9,6 +9,10 @@ import {
   getUsersCountQuery,
   getActiveVerifiedNonAdminUsersQuery,
   updateUserStatusQuery,
+  getWorkerCountQuery,
+  getUsersByDepartmentIdQuery,
+  getUsersProfileQuery,
+  changePasswordQuery,
 } from "../db/queries/adminQueries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -270,6 +274,58 @@ const updateUserStatus = async ({
   }
 };
 
+const getWorkersCount = async () => {
+  try {
+    const result = await getWorkerCountQuery();
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getUsersByDepartmentId = async (departmentId: string) => {
+  try {
+    const result = await getUsersByDepartmentIdQuery(departmentId);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getUsersProfile = async (id: string) => {
+  try {
+    const result = await getUsersProfileQuery(id);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const changePassword = async ({
+  id,
+  password,
+}: {
+  id: number;
+  password: string;
+}) => {
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const bcryptPassword = await bcrypt.hash(password, salt);
+    const result = await changePasswordQuery(
+      id,
+      bcryptPassword,
+    );
+
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export default {
   adminLogin,
   createAdmin,
@@ -280,4 +336,8 @@ export default {
   getUsersCount,
   getActiveVerifiedNonAdminUsers,
   updateUserStatus,
+  getWorkersCount,
+  getUsersByDepartmentId,
+  getUsersProfile,
+  changePassword,
 };

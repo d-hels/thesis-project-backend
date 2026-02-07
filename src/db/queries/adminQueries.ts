@@ -95,14 +95,13 @@ export async function getUserByEmailQuery(email: string) {
       `,
       values: [email],
     });
-    console.log(res, 'res')
+
   } finally {
     client.release();
   }
 
   return camelcasify(res);
 }
-
 
 export async function getUsersQuery() {
   const client = await pool.connect();
@@ -163,7 +162,16 @@ export async function updateUserQuery(
       department_id = COALESCE($8, department_id)
     WHERE id = $1
     RETURNING id, first_name, last_name, email, phone, address, department_id`,
-      values: [id, first_name, last_name, email, phone, address, role, departmentId],
+      values: [
+        id,
+        first_name,
+        last_name,
+        email,
+        phone,
+        address,
+        role,
+        departmentId,
+      ],
     });
     await client.query("COMMIT");
   } catch (error: any) {
@@ -279,15 +287,12 @@ export async function getActiveVerifiedNonAdminUsersQuery() {
   return camelcasify(res, true);
 }
 
-export async function updateUserStatusQuery(
-  id: any,
-  isActive?: any,
-) {
+export async function updateUserStatusQuery(id: any, isActive?: any) {
   const client = await pool.connect();
   let res;
   try {
     await client.query("BEGIN");
-    if(isActive) {
+    if (isActive) {
       res = await client.query({
         text: `
           UPDATE users
@@ -314,3 +319,115 @@ export async function updateUserStatusQuery(
     client.release();
   }
 }
+
+export async function getWorkerCountQuery() {
+  const client = await pool.connect();
+  let res;
+  try {
+    res = await client.query(`
+      SELECT COUNT(*)::int AS users_count
+      FROM users
+      where role = 'worker' OR role = 'manager'
+    `);
+  } finally {
+    client.release();
+  }
+  return camelcasify(res);
+}
+
+export async function getUsersByDepartmentIdQuery(departmentId: string) {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `
+        SELECT
+        u.id,
+        u.first_name || ' ' || u.last_name AS name,
+        u.email,
+        p.title AS position,
+        u.department_id AS "departmentId",
+        u.status,
+        u.phone,
+        u.role,
+        u.created_at AS "hireDate"
+        FROM users u
+        JOIN positions p ON p.id = u.position_id
+        WHERE u.department_id = $1
+      `,
+      values: [departmentId],
+    });
+  } finally {
+    client.release();
+  }
+
+  return camelcasify(res, true);
+}
+
+export async function getUsersProfileQuery(id: any) {
+  const client = await pool.connect();
+  let res;
+  try {
+    res = await client.query(
+      `
+      SELECT
+        e.id,
+        e.first_name AS "firstName",
+        e.last_name AS "lastName",
+        p.title AS "position",
+        d.name AS "department",
+        e.email,
+        e.address,
+        e.phone,
+        e.is_active,
+        e.role,
+        e.department_id,
+        e.last_login_at,
+        e.created_at AS "hireDate",
+        e.status,
+        m.first_name || ' ' || m.last_name AS "manager"
+      FROM users e
+      LEFT JOIN positions p ON e.position_id = p.id
+      LEFT JOIN departments d ON e.department_id = d.id
+      LEFT JOIN users m 
+            ON m.department_id = e.department_id 
+            AND m.role = 'manager'
+      WHERE e.id = $1;
+      `,
+      [id]
+    );
+  } finally {
+    client.release();
+  }
+  return camelcasify(res);
+}
+
+export async function changePasswordQuery(id: any, password: any) {
+  const client = await pool.connect();
+  let res;
+
+  try {
+    await client.query("BEGIN");
+
+    res = await client.query(
+      `
+      UPDATE users
+      SET password = $1
+      WHERE id = $2
+      RETURNING id;
+      `,
+      [password, id]
+    );
+
+    await client.query("COMMIT");
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    console.error(error.message);
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  return camelcasify(res);
+}
+

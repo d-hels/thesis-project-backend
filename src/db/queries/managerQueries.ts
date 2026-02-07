@@ -22,15 +22,46 @@ export async function getDepartmentsQuery() {
   try {
     res = await client.query({
       text: `
-        SELECT
-        id,
-        name,
-        description,
-        created_at
-        FROM departments
-        ORDER BY created_at DESC
+        SELECT 
+          d.id,
+          d.name,
+          d.description,
+          d.status,
+          d.created_at as "createdAt",
+          d.updated_at as "updatedAt",
+          -- Get manager name from users table
+          (
+            SELECT CONCAT(u.first_name, ' ', u.last_name)
+            FROM users u
+            WHERE u.department_id = d.id
+              AND u.role = 'manager'
+              AND u.deleted_at IS NULL
+            LIMIT 1
+          ) as "manager",
+          -- Count workers in department
+          (
+            SELECT COUNT(*)
+            FROM users u
+            WHERE u.department_id = d.id
+              AND u.role = 'worker'
+              AND u.deleted_at IS NULL
+          ) as "employeeCount",
+          -- Count active workers
+          (
+            SELECT COUNT(*)
+            FROM users u
+            WHERE u.department_id = d.id
+              AND u.role = 'worker'
+              AND u.is_active = true
+              AND u.deleted_at IS NULL
+          ) as "activeEmployees"
+        FROM departments d
+        ORDER BY d.created_at DESC
       `,
     });
+  } catch (error) {
+    console.error('Error fetching departments:', error);
+    throw error;
   } finally {
     client.release();
   }
@@ -69,7 +100,9 @@ export async function deleteDepartmentQuery(id: any) {
 
   try {
     res = await client.query({
-      text: `DELETE FROM departments WHERE id = $1`,
+      text: `UPDATE departments
+        SET status = 'inactive'
+        WHERE id = $1`,
       values: [id],
     });
   } finally {
@@ -103,17 +136,27 @@ export async function getPositionsQuery() {
   try {
     res = await client.query({
       text: `
-          SELECT
+        SELECT
   p.id,
-  p.title,
   p.description,
-  p.department_id,
+  p.title AS title,
+  d.name AS department_name,
+  d.id AS department_id,
   p.created_at,
-  d.name AS departmentName
+  p.status,
+  COUNT(u.id) AS employee_count
 FROM positions p
-LEFT JOIN departments d
-  ON p.department_id = d.id
-  ORDER BY p.created_at DESC
+JOIN departments d ON d.id = p.department_id
+LEFT JOIN users u ON u.position_id = p.id
+GROUP BY
+  p.id,
+  p.description,
+  p.title,
+  d.name,
+  d.id,
+  p.created_at
+ORDER BY p.created_at DESC;
+
       `,
     });
   } finally {
@@ -266,6 +309,7 @@ export async function updateWorkerQuery(
   email?: any,
   phone?: any,
   address?: any,
+  status?: string,
   departmentId?: any,
   positionsId?: any
 ) {
@@ -282,10 +326,11 @@ export async function updateWorkerQuery(
       email      = COALESCE($4, email),
       phone      = COALESCE($5, phone),
       address    = COALESCE($6, address),
-      department_id = COALESCE($7, department_id),
+      status     = COALESCE($7, status),
+      department_id = COALESCE($8, department_id),
       position_id = COALESCE($8, position_id)
     WHERE id = $1
-    RETURNING id, first_name, last_name, email, phone, address, department_id, position_id`,
+    RETURNING id, first_name, last_name, email, phone, address, status, department_id, position_id`,
       values: [
         id,
         first_name,
@@ -293,6 +338,7 @@ export async function updateWorkerQuery(
         email,
         phone,
         address,
+        status,
         departmentId,
         positionsId,
       ],
@@ -562,6 +608,29 @@ export async function updateContractStatusQuery(
           status = COALESCE($2, status)
           WHERE id = $1`,
       values: [id, status],
+    });
+    await client.query("COMMIT");
+  } catch (error: any) {
+    console.log(error.message);
+  } finally {
+    client.release();
+  }
+}
+
+export async function transferUserToDepartmentQuery(
+  id: any,
+  departmentId?: any,
+) {
+  const client = await pool.connect();
+  let res;
+  try {
+    await client.query("BEGIN");
+    res = await client.query({
+      text: `
+        UPDATE users SET
+        department_id = COALESCE($2, department_id)
+        WHERE id = $1`,
+      values: [id, departmentId],
     });
     await client.query("COMMIT");
   } catch (error: any) {

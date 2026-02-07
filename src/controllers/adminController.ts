@@ -218,6 +218,79 @@ const updateUserStatus = async (_req: any, res: any, next: any) => {
   }
 };
 
+const getWorkersCount = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getWorkersCount();
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getUsersByDepartmentId = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getUsersByDepartmentId(_req.params.id);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getUsersProfile = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getUsersProfile(_req.params.id);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const changePassword = async (_req: any, res: any, next: any) => {
+  const payload = {
+    id: _req.body.id,
+    password: _req.body.password,
+  };
+console.log(payload)
+  try {
+    const result = await service.changePassword(payload);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   adminLogin,
   adminGate,
@@ -229,4 +302,8 @@ export {
   getUsersCount,
   getActiveVerifiedNonAdminUsers,
   updateUserStatus,
+  getWorkersCount,
+  getUsersByDepartmentId,
+  getUsersProfile,
+  changePassword,
 };

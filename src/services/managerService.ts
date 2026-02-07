@@ -22,6 +22,7 @@ import {
   getContractsQuery,
   createContractQuery,
   updateContractStatusQuery,
+  transferUserToDepartmentQuery,
 } from "../db/queries/managerQueries";
 import { getUserByEmailQuery } from "../db/queries/adminQueries";
 import { checkInAttendanceQuery, checkOutAttendanceQuery, createWorkerQuery } from "../db/queries/workerQueries";
@@ -314,6 +315,7 @@ const updateWorker = async ({
   email,
   phone,
   address,
+  status,
   departmentId,
   positionsId,
 }: {
@@ -323,6 +325,7 @@ const updateWorker = async ({
   email: string;
   phone: string;
   address: number;
+  status: string;
   departmentId: string;
   positionsId: string;
 }) => {
@@ -334,6 +337,7 @@ const updateWorker = async ({
       email,
       phone,
       address,
+      status,
       departmentId,
       positionsId
     );
@@ -485,11 +489,27 @@ const updateContractStatus = async ({
   id,
   status,
 }: {
-  id: number;
+  id: string;
   status: string;
 }) => {
   try {
     const result = await updateContractStatusQuery(id, status);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const transferUserToDepartment = async ({
+  id,
+  departmentId,
+}: {
+  id: string;
+  departmentId: string;
+}) => {
+  try {
+    const result = await transferUserToDepartmentQuery(id, departmentId);
     return result;
   } catch (error) {
     console.log(error);
@@ -524,4 +544,5 @@ export default {
   getContracts,
   createContract,
   updateContractStatus,
+  transferUserToDepartment,
 };
