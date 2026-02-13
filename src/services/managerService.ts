@@ -23,6 +23,7 @@ import {
   createContractQuery,
   updateContractStatusQuery,
   transferUserToDepartmentQuery,
+  getWorkersByDepartmentQuery,
 } from "../db/queries/managerQueries";
 import { getUserByEmailQuery } from "../db/queries/adminQueries";
 import { checkInAttendanceQuery, checkOutAttendanceQuery, createWorkerQuery } from "../db/queries/workerQueries";
@@ -298,6 +299,16 @@ const getWorkers = async () => {
   }
 };
 
+const getWorkersByDepartment = async (departmentId: string) => {
+  try {
+    const result = await getWorkersByDepartmentQuery(departmentId);
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 const deleteWorker = async ({ id }: { id: number }) => {
   try {
     const result = await deleteWorkerQuery(id);
@@ -545,4 +556,5 @@ export default {
   createContract,
   updateContractStatus,
   transferUserToDepartment,
+  getWorkersByDepartment,
 };

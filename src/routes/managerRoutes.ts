@@ -33,6 +33,7 @@ import {
   updateContractStatus,
   sendContractPdfToUser,
   transferUserToDepartment,
+  getWorkersByDepartment,
 } from "../controllers/managerController";
 
 /* =======================
@@ -47,6 +48,7 @@ router.use(auth([Roles.ADMIN, Roles.MANAGER]));
 ======================= */
 router.post("/workers", workerRegister);
 router.get("/workers", getWorkers);
+router.get("/workers/:id", getWorkersByDepartment);
 router.get("/workers/count", getWorkersCount);
 router.put("/workers", updateWorker);
 router.delete("/workers/:id", deleteWorker);

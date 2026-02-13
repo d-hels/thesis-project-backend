@@ -276,6 +276,23 @@ const getWorkers = async (_req: any, res: any, next: any) => {
   }
 };
 
+const getWorkersByDepartment = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getWorkersByDepartment(_req.params.id);
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 const deleteWorker = async (_req: any, res: any, next: any) => {
   const payload = _req.params.id;
 
@@ -650,4 +667,5 @@ export {
   createContract,
   updateContractStatus,
   transferUserToDepartment,
+  getWorkersByDepartment,
 };

@@ -1,3 +1,4 @@
+import { Roles } from "../../lib/types";
 import { camelcasify } from "../../lib/utils";
 import pool from "../setup";
 
@@ -17,7 +18,7 @@ export async function createWorkerQuery(
 
   try {
     res = await client.query({
-      text: `INSERT INTO users(first_name,last_name,email,password,phone,address, department_id, position_id, role)
+      text: `INSERT INTO users(first_name,last_name,email,password,phone,address, department_id, position_id, role_id)
         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
       values: [
         firstName,
@@ -28,7 +29,7 @@ export async function createWorkerQuery(
         address,
         departmentId,
         positionsId,
-        "worker",
+        Roles.WORKER,
       ],
     });
 

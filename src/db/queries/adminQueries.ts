@@ -1,3 +1,4 @@
+import { Roles } from "../../lib/types";
 import { camelcasify } from "../../lib/utils";
 import pool from "../setup";
 
@@ -13,15 +14,31 @@ export async function createAdminQuery(
   let res = { rows: [] };
   try {
     res = await client.query({
-      text: `INSERT INTO users(first_name,last_name,email,password,phone,address,role)
-        VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      values: [first_name, last_name, email, password, phone, address, "admin"],
+      text: `
+        INSERT INTO users (
+          first_name,
+          last_name,
+          email,
+          password,
+          phone,
+          address,
+          role_id
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6,
+          (SELECT id FROM roles WHERE name = 'admin')
+        )
+        RETURNING *;
+      `,
+      values: [first_name, last_name, email, password, phone, address],
     });
   } finally {
     client.release();
   }
+
   return camelcasify(res);
 }
+
 
 export async function createManagerQuery(
   firstName: any,
@@ -39,8 +56,8 @@ export async function createManagerQuery(
 
   try {
     res = await client.query({
-      text: `INSERT INTO users(first_name,last_name,email,password,phone,address,department_id,position_id, role)
-        VALUES($1,$2,$3,$4,$5,$6,$7, $8, $9) RETURNING *`,
+      text: `INSERT INTO users(first_name,last_name,email,password,phone,address,department_id,position_id, role_id)
+        VALUES($1,$2,$3,$4,$5,$6,$7, $8, (SELECT id FROM roles WHERE name = 'manager')) RETURNING *`,
       values: [
         firstName,
         lastName,
@@ -50,7 +67,6 @@ export async function createManagerQuery(
         address,
         departmentId,
         positionId,
-        "manager",
       ],
     });
 
@@ -78,18 +94,21 @@ export async function getUserByEmailQuery(email: string) {
           users.password,
           users.email,
           users.phone,
-          users.role,
+          roles.name as role,
           users.department_id,
           users.position_id,
           departments.name AS department_name,
           positions.title AS positions_title,
           users.address,
+          users.role_id,
           users.created_at
         FROM users
         LEFT JOIN departments
           ON users.department_id = departments.id
         LEFT JOIN positions
           ON users.position_id = positions.id
+        LEFT JOIN roles
+          ON users.role_id = roles.id
         WHERE users.email = $1
         LIMIT 1
       `,
@@ -114,7 +133,7 @@ export async function getUsersQuery() {
           users.last_name,
           users.email,
           users.phone,
-          users.role,
+          roles.name as role,
           users.department_id,
           departments.name AS department_name,
           users.address,
@@ -125,6 +144,8 @@ export async function getUsersQuery() {
           FROM users
           LEFT JOIN departments
           ON users.department_id = departments.id
+          LEFT JOIN roles
+          ON users.role_id = roles.id
           ORDER BY users.created_at DESC
       `,
       values: [],
@@ -272,13 +293,13 @@ export async function getActiveVerifiedNonAdminUsersQuery() {
         FROM users
         LEFT JOIN departments ON users.department_id = departments.id
         LEFT JOIN positions ON users.position_id = positions.id
-        WHERE users.role IN ('worker', 'manager')
+          WHERE users.role_id IN ($1, $2)
           AND users.is_active = true
           AND users.is_verified = true
           AND users.deleted_at IS NULL
         ORDER BY users.created_at DESC
       `,
-      values: [],
+      values: [Roles.MANAGER, Roles.WORKER],
     });
   } finally {
     client.release();
@@ -327,8 +348,8 @@ export async function getWorkerCountQuery() {
     res = await client.query(`
       SELECT COUNT(*)::int AS users_count
       FROM users
-      where role = 'worker' OR role = 'manager'
-    `);
+      WHERE role_id IN ($1, $2)
+    `, [Roles.MANAGER, Roles.WORKER]);
   } finally {
     client.release();
   }
@@ -349,10 +370,11 @@ export async function getUsersByDepartmentIdQuery(departmentId: string) {
         u.department_id AS "departmentId",
         u.status,
         u.phone,
-        u.role,
+        r.name as role,
         u.created_at AS "hireDate"
         FROM users u
         JOIN positions p ON p.id = u.position_id
+        LEFT JOIN roles r ON u.role_id = r.id
         WHERE u.department_id = $1
       `,
       values: [departmentId],
@@ -380,7 +402,7 @@ export async function getUsersProfileQuery(id: any) {
         e.address,
         e.phone,
         e.is_active,
-        e.role,
+        r.name as role,
         e.department_id,
         e.last_login_at,
         e.created_at AS "hireDate",
@@ -389,12 +411,13 @@ export async function getUsersProfileQuery(id: any) {
       FROM users e
       LEFT JOIN positions p ON e.position_id = p.id
       LEFT JOIN departments d ON e.department_id = d.id
+      LEFT JOIN roles r ON e.role_id = r.id
       LEFT JOIN users m 
             ON m.department_id = e.department_id 
-            AND m.role = 'manager'
+            AND m.role_id = $2
       WHERE e.id = $1;
       `,
-      [id]
+      [id, Roles.MANAGER]
     );
   } finally {
     client.release();
@@ -431,3 +454,87 @@ export async function changePasswordQuery(id: any, password: any) {
   return camelcasify(res);
 }
 
+export async function getAllContractsQuery() {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `
+        SELECT 
+  c.id,
+  u.id AS user_id,
+  CONCAT(u.first_name, ' ', u.last_name) AS user_name,
+  u.email AS user_email,
+  c.contract_type,
+  c.salary_amount,
+  c.start_date,
+  c.end_date,
+  c.created_at,
+  d.name AS department,
+  p.title AS position
+FROM contracts c
+JOIN users u ON u.id = c.user_id
+LEFT JOIN departments d ON d.id = u.department_id
+LEFT JOIN positions p ON p.id = u.position_id
+ORDER BY c.created_at DESC
+      `,
+    });
+  } finally {
+    client.release();
+  }
+
+  return camelcasify(res, true);
+}
+
+export async function getAllUsersQuery() {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `
+        Select
+        id,
+        first_name || ' ' || last_name AS full_name
+        from users
+      `,
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res, true);
+}
+
+export async function getManagersQuery() {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `SELECT
+          users.id,
+          users.first_name,
+          users.last_name,
+          users.email,
+          users.phone,
+          roles.name as role,
+          users.department_id,
+          departments.name AS department_name,
+          users.address,
+          users.status,
+          users.is_active,
+          users.last_login_at,
+          users.created_at
+          FROM users
+          LEFT JOIN departments
+          ON users.department_id = departments.id
+          LEFT JOIN roles
+          ON users.role_id = roles.id
+          where users.role_id = $1
+          ORDER BY users.created_at DESC
+      `,
+      values: [Roles.MANAGER],
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res, true);
+}

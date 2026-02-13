@@ -1,3 +1,4 @@
+import { Roles } from "../../lib/types";
 import { camelcasify } from "../../lib/utils";
 import pool from "../setup";
 
@@ -34,7 +35,7 @@ export async function getDepartmentsQuery() {
             SELECT CONCAT(u.first_name, ' ', u.last_name)
             FROM users u
             WHERE u.department_id = d.id
-              AND u.role = 'manager'
+              AND u.role_id = $1
               AND u.deleted_at IS NULL
             LIMIT 1
           ) as "manager",
@@ -43,7 +44,7 @@ export async function getDepartmentsQuery() {
             SELECT COUNT(*)
             FROM users u
             WHERE u.department_id = d.id
-              AND u.role = 'worker'
+              AND u.role_id = $2
               AND u.deleted_at IS NULL
           ) as "employeeCount",
           -- Count active workers
@@ -51,13 +52,13 @@ export async function getDepartmentsQuery() {
             SELECT COUNT(*)
             FROM users u
             WHERE u.department_id = d.id
-              AND u.role = 'worker'
+              AND u.role_id = $2
               AND u.is_active = true
               AND u.deleted_at IS NULL
           ) as "activeEmployees"
         FROM departments d
         ORDER BY d.created_at DESC
-      `,
+      `, values: [Roles.MANAGER, Roles.WORKER]
     });
   } catch (error) {
     console.error('Error fetching departments:', error);
@@ -238,8 +239,8 @@ export async function getWorkersCountQuery() {
     res = await client.query({
       text: `SELECT COUNT(*)::int AS employee_count
         FROM users
-        WHERE role = $1`,
-      values: ["worker"],
+        WHERE role_id = $1`,
+      values: [Roles.WORKER],
     });
   } finally {
     client.release();
@@ -270,10 +271,45 @@ export async function getWorkersQuery() {
           ON users.department_id = departments.id
         LEFT JOIN positions
           ON users.position_id = positions.id
-        WHERE users.role = 'worker'
+        WHERE users.role_id = $1
       ORDER BY users.created_at DESC
       `,
-      values: [],
+      values: [Roles.WORKER],
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res, true);
+}
+
+export async function getWorkersByDepartmentQuery(departmentId: string) {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `
+        SELECT
+        users.id,
+        users.first_name,
+        users.last_name,
+        users.email,
+        users.phone,
+        users.status,
+        users.department_id,
+        departments.name AS department_name,
+        users.position_id,
+        positions.title AS position_title,
+        users.address,
+        users.created_at
+        FROM users
+        LEFT JOIN departments
+          ON users.department_id = departments.id
+        LEFT JOIN positions
+          ON users.position_id = positions.id
+        WHERE users.role_id = $2 and users.department_id = $1
+      ORDER BY users.created_at DESC
+      `,
+      values: [departmentId, Roles.WORKER],
     });
   } finally {
     client.release();
@@ -365,9 +401,9 @@ export async function getAttendanceWorkersByDepartmentQuery(id: string) {
         ON u.id = a.user_id
         WHERE u.department_id = $1
         AND a.date = CURRENT_DATE
-        AND u.role = 'worker'
+        AND u.role_id = $2
       `,
-      values: [id],
+      values: [id, Roles.WORKER],
     });
   } finally {
     client.release();
@@ -491,11 +527,11 @@ export async function getDepartmentAttendanceStatsByIdQuery(departmentId: string
           AND a.date = CURRENT_DATE
 
         WHERE d.id = $1
-          AND u.role = 'worker'
+          AND u.role_id = $2
 
         GROUP BY d.id, d.name;
       `,
-      values: [departmentId],
+      values: [departmentId, Roles.WORKER],
     });
   } finally {
     client.release();
@@ -524,10 +560,10 @@ export async function getDepartmentAttendanceByDateRangeQuery(
           ON a.user_id = u.id
           AND a.date BETWEEN $2 AND $3
         WHERE u.department_id = $1
-          AND u.role = 'worker'
+          AND u.role_id = $4
         ORDER BY a.date ASC, u.first_name ASC;
       `,
-      values: [departmentId, startDate, endDate],
+      values: [departmentId, startDate, endDate, Roles.WORKER],
     });
   } finally {
     client.release();
@@ -547,9 +583,9 @@ export async function getWorkersByDepartmentIdQuery(departmentId: string) {
         first_name || ' ' || last_name AS full_name
         from users
         where department_id = $1
-        AND role = 'worker'
+        AND role_id = $2
       `,
-      values: [departmentId],
+      values: [departmentId, Roles.WORKER],
     });
   } finally {
     client.release();

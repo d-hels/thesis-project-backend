@@ -4,7 +4,7 @@ exports.shorthands = undefined
 
 exports.up = pgm => {
   pgm.createTable('attendance', {
-    id: { type: 'uuid', notNull: true, default: pgm.func('gen_random_uuid()') },
+    id: { type: 'uuid', notNull: true, primaryKey: true, default: pgm.func('gen_random_uuid()') },
     user_id: { type: 'uuid', notNull: true },
     date: { type: 'date', notNull: true },
     check_in: { type: 'time', notNull: false },

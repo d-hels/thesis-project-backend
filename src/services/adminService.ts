@@ -13,6 +13,9 @@ import {
   getUsersByDepartmentIdQuery,
   getUsersProfileQuery,
   changePasswordQuery,
+  getAllContractsQuery,
+  getAllUsersQuery,
+  getManagersQuery,
 } from "../db/queries/adminQueries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -37,6 +40,7 @@ const adminLogin = async ({
     const tokenPayload = {
       email: email,
       id: user.id,
+      role_id: user.roleId,
     };
 
     const token = jwt.sign(
@@ -149,6 +153,16 @@ const createAdmin = async ({
 const getUsers = async () => {
   try {
     const result = await getUsersQuery();
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getManagers = async () => {
+  try {
+    const result = await getManagersQuery();
     return result;
   } catch (error) {
     console.log(error);
@@ -326,10 +340,31 @@ const changePassword = async ({
   }
 };
 
+const getAllContracts = async () => {
+  try {
+    const result = await getAllContractsQuery();
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getAllUsers = async () => {
+  try {
+    const result = await getAllUsersQuery();
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export default {
   adminLogin,
   createAdmin,
   getUsers,
+  getManagers,
   updateUser,
   deleteUser,
   updateMyProfile,
@@ -340,4 +375,6 @@ export default {
   getUsersByDepartmentId,
   getUsersProfile,
   changePassword,
+  getAllContracts,
+  getAllUsers,
 };

@@ -7,14 +7,13 @@ exports.up = pgm => {
   pgm.sql('CREATE EXTENSION IF NOT EXISTS "pgcrypto";'); // for gen_random_uuid()
 
   pgm.createTable('users', {
-    id: { type: 'uuid', notNull: true, default: pgm.func('gen_random_uuid()') },
+    id: { type: 'uuid', notNull: true, primaryKey: true, default: pgm.func('gen_random_uuid()') },
     first_name: { type: 'varchar(80)', notNull: true },
     last_name: { type: 'varchar(80)', notNull: true },
     email: { type: 'varchar(80)', notNull: true, unique: true },
     password: { type: 'varchar(255)', notNull: true },
     phone: { type: 'text', notNull: false },
     address: { type: 'text', notNull: false },
-    role: { type: 'varchar(30)', notNull: true },
     created_at: {
       type: 'timestamp',
       notNull: true,
@@ -27,8 +26,6 @@ exports.up = pgm => {
     },
   });
 
-  pgm.createIndex('users', 'id');
-  pgm.addConstraint('users', 'pk_userId_unique', 'UNIQUE(id)');
 };
 
 exports.down = pgm => {

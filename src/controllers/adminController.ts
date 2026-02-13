@@ -90,6 +90,22 @@ const getUsers = async (_req: any, res: any, next: any) => {
   }
 };
 
+const getManagers = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getManagers();
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 const updateUser = async (_req: any, res: any, next: any) => {
   const payload = {
     id: _req.body.id,
@@ -291,11 +307,45 @@ console.log(payload)
   }
 };
 
+const getAllContracts = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getAllContracts();
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+const getAllUsers = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getAllUsers();
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err: any) {
+    console.log(err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   adminLogin,
   adminGate,
   createAdmin,
   getUsers,
+  getManagers,
   updateUser,
   deleteUser,
   updateMyProfile,
@@ -306,4 +356,6 @@ export {
   getUsersByDepartmentId,
   getUsersProfile,
   changePassword,
+  getAllContracts,
+  getAllUsers,
 };

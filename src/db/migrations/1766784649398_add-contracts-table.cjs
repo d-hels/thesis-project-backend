@@ -4,7 +4,7 @@ exports.shorthands = undefined
 
 exports.up = pgm => {
   pgm.createTable('contracts', {
-    id: { type: 'uuid', notNull: true, default: pgm.func('gen_random_uuid()') },
+    id: { type: 'uuid', notNull: true, primaryKey: true, default: pgm.func('gen_random_uuid()') },
 
     user_id: {
       type: 'uuid',
@@ -42,11 +42,7 @@ exports.up = pgm => {
   });
 
   // Add indexes
-  pgm.createIndex('contracts', 'id');
   pgm.createIndex('contracts', 'user_id');
-
-  // Set primary key
-  pgm.addConstraint('contracts', 'pk_contracts_id', 'PRIMARY KEY(id)');
 }
 
 exports.down = pgm => {

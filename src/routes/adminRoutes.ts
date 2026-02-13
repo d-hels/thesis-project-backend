@@ -20,6 +20,9 @@ import {
   getUsersByDepartmentId,
   getUsersProfile,
   changePassword,
+  getAllContracts,
+  getAllUsers,
+  getManagers,
 } from "../controllers/adminController";
 
 /* =======================
@@ -32,6 +35,7 @@ router.post("/login", adminGateGuard, adminLogin);
    Protected (Admin / Manager)
 ======================= */
 router.put("/users/me", auth([Roles.ADMIN, Roles.MANAGER]), updateMyProfile);
+router.get("/users/profile/:id", auth([Roles.ADMIN, Roles.MANAGER]), getUsersProfile);
 
 /* =======================
    Admin-only
@@ -40,19 +44,23 @@ router.use(auth([Roles.ADMIN]));
 
 /* Users */
 router.get("/users", getUsers);
+router.get("/managers", getManagers);
 router.get("/users/count", getUsersCount);
 router.get("/workers/count", getWorkersCount);
 router.put("/users/update", updateUser);
 router.put("/users/update/status/:id", updateUserStatus);
 router.delete("/users/:id", deleteUser);
 router.get("/departments/users/:id", getUsersByDepartmentId);
-router.get("/users/profile/:id", getUsersProfile);
 router.put("/change/password", changePassword);
+router.get("/users/all", getAllUsers);
 
 /* Admins */
 router.post("/create", createAdmin);
 
 /* Dashboard */
 router.get("/employees/recent", getActiveVerifiedNonAdminUsers);
+
+/* Contrats */
+router.get("/contracts", getAllContracts);
 
 export default router;

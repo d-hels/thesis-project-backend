@@ -4,7 +4,7 @@ exports.shorthands = undefined
 
 exports.up = pgm => {
   pgm.createTable('managers', {
-    id: { type: 'uuid', notNull: true, default: pgm.func('gen_random_uuid()') },
+    id: { type: 'uuid', notNull: true, primaryKey: true, default: pgm.func('gen_random_uuid()') },
     user_id: { type: 'uuid', notNull: true, unique: true },
     created_at: {
       type: 'timestamp',
@@ -17,8 +17,6 @@ exports.up = pgm => {
       default: pgm.func('current_timestamp'),
     },
   });
-
-  pgm.createIndex('managers', 'id');
 
   pgm.addConstraint(
     'managers',

@@ -6,7 +6,7 @@ export async function getUserById(id: string) {
   let res = { rows: [] };
   try {
     res = await client.query({
-      text: `SELECT id, role, first_name, last_name from users WHERE id = $1`,
+      text: `SELECT id, role_id, first_name, last_name from users WHERE id = $1`,
       values: [id],
     });
   } finally {

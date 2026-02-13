@@ -1,11 +1,19 @@
 import passport from "passport";
 import { Roles } from "../lib/types";
 
-const auth = (roles?: Roles[]) => {
-  return (_req: any, res: any, next: any) => {
+interface AuthenticatedRequest extends Express.Request {
+  user?: {
+    id: number;
+    email: string;
+    roleId: Roles;
+  };
+}
+
+const auth = (allowedRoles?: Roles[]) => {
+  return (_req: AuthenticatedRequest, res: any, next: any) => {
     passport.authenticate(
       "jwt",
-      { failWithError: true },
+      { session: false, failWithError: true },
       (err: any, user: any, info: any) => {
         if (err) {
           return res.status(401).json({
@@ -21,8 +29,9 @@ const auth = (roles?: Roles[]) => {
           });
         }
 
-        if (roles && roles.length > 0) {
-          if (!roles.includes(user.role)) {
+        // Check if user's role_id is in allowed roles
+        if (allowedRoles && allowedRoles.length > 0) {
+          if (!allowedRoles.includes(user.roleId)) {
             return res.status(403).json({
               success: false,
               message: "You don't have permission to access this route",
@@ -37,4 +46,4 @@ const auth = (roles?: Roles[]) => {
   };
 };
 
-export { auth };
+export { auth, AuthenticatedRequest };
