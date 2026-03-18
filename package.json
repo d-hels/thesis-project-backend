@@ -3,14 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "start": "nodemon dist/app.js",
-    "build": "rimraf dist && tsc",
-    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
-    "migrations": "node-pg-migrate --template-file-name ./src/db/migration-template/migration-template.cjs -m ./src/db/migrations",
-    "lint": "eslint . --ext .ts",
-    "eslint:fix": "eslint --fix"
-  },
+"scripts": {
+  "build": "rimraf dist && tsc",
+  "start": "node dist/app.js",
+  "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
