@@ -14,7 +14,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 const options: cors.CorsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: [
+    "http://localhost:5173",
+    "https://thesis-project-backend-production.up.railway.app"
+  ],
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
   allowedHeaders: [
@@ -25,6 +28,7 @@ const options: cors.CorsOptions = {
     "Authorization",
   ],
 };
+
 app.use(cors(options));
 
 passport.use(strategy);
