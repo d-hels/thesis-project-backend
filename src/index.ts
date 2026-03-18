@@ -8,7 +8,7 @@ import { strategy } from "./utils/auth";
 import "./db/queries/attendanceCron";
 
 const app = express();
-const PORT = 3000;
+const PORT: any = process.env.PORT || 3000;
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
