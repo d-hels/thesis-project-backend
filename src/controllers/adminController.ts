@@ -178,9 +178,9 @@ const deleteUser = async (_req: any, res: any, next: any) => {
   }
 };
 
-const getUsersCount = async (_req: any, res: any, next: any) => {
+const getUsersStatistics = async (_req: any, res: any, next: any) => {
   try {
-    const result = await service.getUsersCount();
+    const result = await service.getUsersStatistics();
 
     res.status(200).json({
       success: true,
@@ -340,6 +340,22 @@ const getAllUsers = async (_req: any, res: any, next: any) => {
   }
 };
 
+const getDepartmentAttendancePercentage = async (_req: any, res: any, next: any) => {
+  try {
+    const result = await service.getDepartmentAttendancePercentage();
+
+    res.status(200).json({
+      success: true,
+      payload: result,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
 export {
   adminLogin,
   adminGate,
@@ -349,7 +365,7 @@ export {
   updateUser,
   deleteUser,
   updateMyProfile,
-  getUsersCount,
+  getUsersStatistics,
   getActiveVerifiedNonAdminUsers,
   updateUserStatus,
   getWorkersCount,
@@ -358,4 +374,5 @@ export {
   changePassword,
   getAllContracts,
   getAllUsers,
+  getDepartmentAttendancePercentage,
 };

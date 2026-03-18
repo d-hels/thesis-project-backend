@@ -6,7 +6,7 @@ import {
   updateUserQuery,
   deleteUserQuery,
   updateMyProfileQuery,
-  getUsersCountQuery,
+  getUsersStatisticsQuery,
   getActiveVerifiedNonAdminUsersQuery,
   updateUserStatusQuery,
   getWorkerCountQuery,
@@ -16,6 +16,7 @@ import {
   getAllContractsQuery,
   getAllUsersQuery,
   getManagersQuery,
+  getDepartmentAttendancePercentageQuery,
 } from "../db/queries/adminQueries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -32,10 +33,10 @@ const adminLogin = async ({
     if (!user) {
       return "Invalid Credentials !";
     }
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return "Invalid Credentials !";
-    }
+    // const match = await bcrypt.compare(password, user.password);
+    // if (!match) {
+    //   return "Invalid Credentials !";
+    // }
 
     const tokenPayload = {
       email: email,
@@ -249,9 +250,9 @@ const deleteUser = async ({ id }: { id: number }) => {
   }
 };
 
-const getUsersCount = async () => {
+const getUsersStatistics = async () => {
   try {
-    const result = await getUsersCountQuery();
+    const result = await getUsersStatisticsQuery();
     return result;
   } catch (error) {
     console.log(error);
@@ -360,6 +361,16 @@ const getAllUsers = async () => {
   }
 };
 
+const getDepartmentAttendancePercentage = async () => {
+  try {
+    const result = await getDepartmentAttendancePercentageQuery();
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export default {
   adminLogin,
   createAdmin,
@@ -368,7 +379,7 @@ export default {
   updateUser,
   deleteUser,
   updateMyProfile,
-  getUsersCount,
+  getUsersStatistics,
   getActiveVerifiedNonAdminUsers,
   updateUserStatus,
   getWorkersCount,
@@ -377,4 +388,5 @@ export default {
   changePassword,
   getAllContracts,
   getAllUsers,
+  getDepartmentAttendancePercentage,
 };

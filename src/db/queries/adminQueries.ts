@@ -257,13 +257,24 @@ export async function deleteUserQuery(id: any) {
   return camelcasify(res);
 }
 
-export async function getUsersCountQuery() {
+export async function getUsersStatisticsQuery() {
   const client = await pool.connect();
   let res;
   try {
     res = await client.query(`
-      SELECT COUNT(*)::int AS users_count
-      FROM users
+      SELECT 
+    (SELECT COUNT(*) FROM users) as total_workers,
+    
+    (SELECT COUNT(*) FROM users 
+     WHERE created_at >= DATE_TRUNC('week', CURRENT_DATE)) as new_users_this_week,
+    
+    (SELECT COUNT(DISTINCT user_id) FROM attendance 
+     WHERE DATE(created_at) = CURRENT_DATE) as present_today,
+    
+    (
+        (SELECT COUNT(DISTINCT user_id) FROM attendance WHERE DATE(created_at) = CURRENT_DATE) - 
+        (SELECT COUNT(DISTINCT user_id) FROM attendance WHERE DATE(created_at) = CURRENT_DATE - INTERVAL '1 day')
+    ) as attendance_increase;
     `);
   } finally {
     client.release();
@@ -289,10 +300,12 @@ export async function getActiveVerifiedNonAdminUsersQuery() {
           positions.title AS position_title,
           users.address,
           users.status,
-          users.created_at
+          users.created_at,
+          roles.name AS role
         FROM users
         LEFT JOIN departments ON users.department_id = departments.id
         LEFT JOIN positions ON users.position_id = positions.id
+        LEFT JOIN roles ON users.role_id = roles.id
           WHERE users.role_id IN ($1, $2)
           AND users.is_active = true
           AND users.is_verified = true
@@ -532,6 +545,38 @@ export async function getManagersQuery() {
           ORDER BY users.created_at DESC
       `,
       values: [Roles.MANAGER],
+    });
+  } finally {
+    client.release();
+  }
+  return camelcasify(res, true);
+}
+
+export async function getDepartmentAttendancePercentageQuery() {
+  const client = await pool.connect();
+  let res = { rows: [] };
+  try {
+    res = await client.query({
+      text: `SELECT 
+  d.id,
+  d.name as department_name,
+  COUNT(DISTINCT u.id) as total_employees,
+  COUNT(DISTINCT a.user_id) as present_today,
+  ROUND(
+    (COUNT(DISTINCT a.user_id)::decimal / NULLIF(COUNT(DISTINCT u.id), 0) * 100), 
+    2
+  ) as attendance_percentage,
+  COUNT(CASE WHEN a.status = 'late' THEN 1 END) as late_count
+FROM departments d
+LEFT JOIN users u ON u.department_id = d.id AND u.is_active = true
+LEFT JOIN attendance a ON a.user_id = u.id 
+  AND a.date = CURRENT_DATE
+  AND a.status IN ('present', 'late')
+WHERE d.status = 'active'
+GROUP BY d.id, d.name
+ORDER BY attendance_percentage ASC limit 3;
+      `,
+      values: [],
     });
   } finally {
     client.release();

@@ -13,7 +13,6 @@ import {
   deleteUser,
   updateMyProfile,
   adminGate,
-  getUsersCount,
   getActiveVerifiedNonAdminUsers,
   updateUserStatus,
   getWorkersCount,
@@ -23,6 +22,8 @@ import {
   getAllContracts,
   getAllUsers,
   getManagers,
+  getDepartmentAttendancePercentage,
+  getUsersStatistics,
 } from "../controllers/adminController";
 
 /* =======================
@@ -45,7 +46,7 @@ router.use(auth([Roles.ADMIN]));
 /* Users */
 router.get("/users", getUsers);
 router.get("/managers", getManagers);
-router.get("/users/count", getUsersCount);
+router.get("/users/statistics", getUsersStatistics);
 router.get("/workers/count", getWorkersCount);
 router.put("/users/update", updateUser);
 router.put("/users/update/status/:id", updateUserStatus);
@@ -59,6 +60,7 @@ router.post("/create", createAdmin);
 
 /* Dashboard */
 router.get("/employees/recent", getActiveVerifiedNonAdminUsers);
+router.get("/departments/attendance/percentage", getDepartmentAttendancePercentage);
 
 /* Contrats */
 router.get("/contracts", getAllContracts);
