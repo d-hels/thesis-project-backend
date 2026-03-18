@@ -1,14 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "target": "es5",
     "module": "commonjs",
-    "rootDir": "src",
     "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    // "sourceMap": true
+    "sourceMap": true
   },
   "compileOnSave": true
 }
