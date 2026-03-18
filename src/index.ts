@@ -16,7 +16,7 @@ app.use(express.json());
 const options: cors.CorsOptions = {
   origin: [
     "http://localhost:5173",
-    "https://thesis-project-backend-production.up.railway.app"
+    "https://vermillion-croquembouche-f9df19.netlify.app"
   ],
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],

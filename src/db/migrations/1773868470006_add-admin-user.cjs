@@ -16,7 +16,7 @@ exports.up = (pgm) => {
       ) VALUES (
         'Dielleza',
         'Helshani',
-        'admin@admin.com',
+        'admin4@admin.com',
         '$2b$10$jHy/7GAMUpfc1iiWjtr6HOfcympGW1l02IVCrwzgNt.b/81RjBRCC',
         '045 949 101',
         'Beqe shaqa',
